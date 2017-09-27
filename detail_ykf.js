@@ -4,13 +4,15 @@ const consts = require('./consts.js');
 const sendError = require('./slack');
 
 const COMPANY = consts.YKF;
-const URL = 'http://www.yaeyama.co.jp/situation.php';
+const URL = 'https://www.yaeyama.co.jp/operation.html';
 let $;
 
 module.exports = () => {
   return Promise.resolve()
     .then(() => console.log(`開始 ${COMPANY} 詳細`))
+    .then(() => console.log(`getHtmlContents`))
     .then(() => getHtmlContents())
+    .then(() => console.log(`perseAndSend`))
     .then(() => perseAndSend(consts.TAKETOMI))  // 竹富
     .then(() => perseAndSend(consts.KOHAMA))    // 小浜
     .then(() => perseAndSend(consts.KUROSHIMA)) // 黒島
@@ -20,7 +22,8 @@ module.exports = () => {
     // .then(() => perseAndSend(consts.KOHAMA_TAKETOMI)) // 小浜-竹富
     // .then(() => perseAndSend(consts.KOHAMA_OOHARA)) // 小浜-大原
     // .then(() => perseAndSend(consts.UEHARA_HATOMA)) // 上原-鳩間
-    .catch((error) => sendError(error.stack))
+    // .catch((error) => sendError(error.stack))
+    .catch(process.on('unhandledRejection', console.dir))
     .then(() => console.log(`完了 ${COMPANY} 詳細`))
 }
 
@@ -39,8 +42,8 @@ function getHtmlContents() {
  * @param {タグ全体} $ 
  */
 function perseAndSend(portCode) {
+  console.log("perseAndSend start");
   const selecotr = getSelectorString(portCode);
-  // putHtmlLog(selecotr).find('td');
 
   // 詳細テーブル用の変数
   let timeTable = {
@@ -50,45 +53,56 @@ function perseAndSend(portCode) {
     },
     row: []
   };
-
+  console.log(portCode);
+  console.log(selecotr);
+  putHtmlLog($(selecotr));
   // tableタグをループしてパース
   $(selecotr).each(function (idx) {
+    console.log("$(selecotr).each start");
+    putHtmlLog($(this));
     // 2列目以下は不要なのでスキップ
-    if (idx < 2) {
+    if (idx < 1) {
       return true;
-    } else if (idx == 2) {
+    } else if (idx == 1) {
       //ヘッダーをとる処理
-      timeTable.header.left = $(this).find('td').eq(0).text().trim();
-      timeTable.header.right = $(this).find('td').eq(1).text().trim();
+      timeTable.header.left = $(this).find('tr').eq(0).text().trim();
+      timeTable.header.right = $(this).find('tr').eq(1).text().trim();
       return true;
     }
 
     //ボディ部分
-    //<span>○</span>10:00
-    //<span>○</span>10:15
-    const td = $(this).find('td');
+    //<td class="thble">〇 07:30 </td><td class="thble">〇 07:45 </td>
+    const tr = $(this).find('tr');
+    console.log('tr 表示')
+    putHtmlLog(tr);
+    console.log('tr.eq')
+    console.log(tr.eq(0).contents().text());
+    console.log(tr.eq(1).contents().text());
 
-    let row = {
-      left: {
-        time: td.eq(0).contents().eq(2).text(),
-        status: {
-          code: getRowStatusCode(td.eq(0).contents().eq(1).text()),
-          text: convertRowStatusText(td.eq(0).contents().eq(1).text())
-        }
-      },
-      right: {
-        time: td.eq(1).contents().eq(2).text(),
-        status: {
-          code: getRowStatusCode(td.eq(1).contents().eq(1).text()),
-          text: convertRowStatusText(td.eq(1).contents().eq(1).text().trim())
-        }
-      }
-    }
-    timeTable.row.push(row);
+
+    // let row = {
+    //   left: {
+    //     time: td.eq(0).contents().eq(2).text(),
+    //     status: {
+    //       code: getRowStatusCode(td.eq(0).contents().eq(1).text()),
+    //       text: convertRowStatusText(td.eq(0).contents().eq(1).text())
+    //     }
+    //   },
+    //   right: {
+    //     time: td.eq(1).contents().eq(2).text(),
+    //     status: {
+    //       code: getRowStatusCode(td.eq(1).contents().eq(1).text()),
+    //       text: convertRowStatusText(td.eq(1).contents().eq(1).text().trim())
+    //     }
+    //   }
+    // }
+    // timeTable.row.push(row);
+    console.log("$(selecotr).each end");
   });
 
   // Firebaseへ登録
-  return sendToFirebase(portCode, timeTable);
+  // return sendToFirebase(portCode, timeTable);
+  return Promise.resolve();
 };
 
 function putHtmlLog(value) {
@@ -103,23 +117,23 @@ function putHtmlLog(value) {
 function getSelectorString(route) {
   switch (route) {
     case consts.TAKETOMI:
-      return '#unkou_id1 table tbody tr';
+      return '#operationstatus dive.local:nth-child(4)';
     case consts.KOHAMA:
-      return '#unkou_id2 > table > tbody > tr';
+      return '#operationstatus dive.local:nth-child(5) > table > tbody';
     case consts.KOHAMA_TAKETOMI:
-      return '#unkou_id3 > table > tbody > tr';
+      return '#operationstatus > div > div:nth-child(10) > table > tbody';
     case consts.KUROSHIMA:
-      return '#unkou_id4 > table > tbody > tr';
+      return '#operationstatus > div > div:nth-child(6) > table > tbody';
     case consts.KOHAMA_OOHARA:
-      return '#unkou_id5 > table > tbody > tr';
+      return '#operationstatus > div > div:nth-child(11) > table > tbody';
     case consts.OOHARA:
-      return '#unkou_id6 > table > tbody > tr';
+      return '#operationstatus > div > div:nth-child(7) > table > tbody';
     case consts.UEHARA:
-      return '#unkou_id7 > table > tbody > tr';
+      return '#operationstatus > div > div:nth-child(8) > table > tbody';
     case consts.HATOMA:
-      return '#unkou_id8 > table > tbody > tr';
+      return '#operationstatus > div > div:nth-child(9) > table > tbody';
     case consts.UEHARA_HATOMA:
-      return '#unkou_id9 > table > tbody > tr';
+      return '#operationstatus > div > div:nth-child(12) > table > tbody';
     default:
       return '';
   }
