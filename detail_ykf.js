@@ -14,11 +14,11 @@ module.exports = () => {
     .then(() => getHtmlContents())
     .then(() => console.log(`perseAndSend`))
     .then(() => perseAndSend(consts.TAKETOMI))  // 竹富
-    .then(() => perseAndSend(consts.KOHAMA))    // 小浜
-    .then(() => perseAndSend(consts.KUROSHIMA)) // 黒島
-    .then(() => perseAndSend(consts.OOHARA))    // 大原
-    .then(() => perseAndSend(consts.UEHARA))    // 上原
-    .then(() => perseAndSend(consts.HATOMA))    // 鳩間
+    // .then(() => perseAndSend(consts.KOHAMA))    // 小浜
+    // .then(() => perseAndSend(consts.KUROSHIMA)) // 黒島
+    // .then(() => perseAndSend(consts.OOHARA))    // 大原
+    // .then(() => perseAndSend(consts.UEHARA))    // 上原
+    // .then(() => perseAndSend(consts.HATOMA))    // 鳩間
     // .then(() => perseAndSend(consts.KOHAMA_TAKETOMI)) // 小浜-竹富
     // .then(() => perseAndSend(consts.KOHAMA_OOHARA)) // 小浜-大原
     // .then(() => perseAndSend(consts.UEHARA_HATOMA)) // 上原-鳩間
@@ -53,32 +53,32 @@ function perseAndSend(portCode) {
     },
     row: []
   };
-  console.log(portCode);
-  console.log(selecotr);
-  putHtmlLog($(selecotr));
+  // console.log(portCode);
+  // console.log(selecotr);
+  // putHtmlLog($(selecotr));
   // tableタグをループしてパース
   $(selecotr).each(function (idx) {
-    console.log("$(selecotr).each start");
+    console.log(idx);
     putHtmlLog($(this));
     // 2列目以下は不要なのでスキップ
     if (idx < 1) {
       return true;
     } else if (idx == 1) {
       //ヘッダーをとる処理
-      timeTable.header.left = $(this).find('tr').eq(0).text().trim();
-      timeTable.header.right = $(this).find('tr').eq(1).text().trim();
+      // timeTable.header.left = $(this).find('td').eq(0).text().trim();
+      // timeTable.header.right = $(this).find('td').eq(1).text().trim();
+      console.log($(this).find('td').eq(0).text().trim());
+      console.log($(this).find('td').eq(1).text().trim());
       return true;
     }
 
     //ボディ部分
     //<td class="thble">〇 07:30 </td><td class="thble">〇 07:45 </td>
-    const tr = $(this).find('tr');
-    console.log('tr 表示')
-    putHtmlLog(tr);
-    console.log('tr.eq')
-    console.log(tr.eq(0).contents().text());
-    console.log(tr.eq(1).contents().text());
-
+    const td = $(this).find('td');
+    console.log(td.eq(0).contents().text().substring(0, 1));
+    console.log(td.eq(0).contents().text().substring(1).trim());
+    console.log(td.eq(1).contents().text().substring(0, 1));
+    console.log(td.eq(1).contents().text().substring(1).trim());
 
     // let row = {
     //   left: {
@@ -117,19 +117,19 @@ function putHtmlLog(value) {
 function getSelectorString(route) {
   switch (route) {
     case consts.TAKETOMI:
-      return '#operationstatus dive.local:nth-child(4)';
+      return '#operationstatus > div > div:nth-child(4) > table > tr';
     case consts.KOHAMA:
-      return '#operationstatus dive.local:nth-child(5) > table > tbody';
+      return '#operationstatus > div > div:nth-child(5) > table';
     case consts.KOHAMA_TAKETOMI:
-      return '#operationstatus > div > div:nth-child(10) > table > tbody';
+      return '#operationstatus > div > div:nth-child(10) > table';
     case consts.KUROSHIMA:
-      return '#operationstatus > div > div:nth-child(6) > table > tbody';
+      return '#operationstatus > div > div:nth-child(6) > table';
     case consts.KOHAMA_OOHARA:
-      return '#operationstatus > div > div:nth-child(11) > table > tbody';
+      return '#operationstatus > div > div:nth-child(11) > table';
     case consts.OOHARA:
-      return '#operationstatus > div > div:nth-child(7) > table > tbody';
+      return '#operationstatus > div > div:nth-child(7) > table';
     case consts.UEHARA:
-      return '#operationstatus > div > div:nth-child(8) > table > tbody';
+      return '#operationstatus > div > div:nth-child(8) > table';
     case consts.HATOMA:
       return '#operationstatus > div > div:nth-child(9) > table > tbody';
     case consts.UEHARA_HATOMA:
